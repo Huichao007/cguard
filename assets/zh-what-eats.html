@@ -1,0 +1,286 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <style>
+      :root {
+        --bg: #0a0e13;
+        --panel: #121a23;
+        --line: #1f2b3a;
+        --fg: #e9f0f7;
+        --dim: #8fa2b7;
+        --danger: #ff6b5a;
+        --warn: #ffc24b;
+        --ok: #35d399;
+        --brand: #58a6ff;
+      }
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        background: var(--bg);
+      }
+      body {
+        width: 1280px;
+        height: 690px;
+        overflow: hidden;
+        font-family: 'Microsoft YaHei', 'Segoe UI', 'PingFang SC', sans-serif;
+        color: var(--fg);
+        -webkit-font-smoothing: antialiased;
+        position: relative;
+      }
+      .glow {
+        position: absolute;
+        width: 700px;
+        height: 700px;
+        right: -260px;
+        top: -320px;
+        background: radial-gradient(circle, rgba(255, 107, 90, 0.1), transparent 62%);
+      }
+      .wrap {
+        position: relative;
+        padding: 44px 64px 36px;
+      }
+
+      .head {
+        display: flex;
+        align-items: baseline;
+        gap: 14px;
+      }
+      h2 {
+        font-size: 32px;
+        font-weight: 700;
+        letter-spacing: -0.6px;
+      }
+      .q {
+        font-size: 14px;
+        color: var(--dim);
+      }
+      .sub {
+        margin-top: 8px;
+        font-size: 14px;
+        color: var(--dim);
+        max-width: 920px;
+        line-height: 1.5;
+      }
+
+      .grp {
+        margin-top: 24px;
+      }
+      .grp-h {
+        display: flex;
+        align-items: baseline;
+        gap: 11px;
+        padding-bottom: 9px;
+        border-bottom: 1px solid var(--line);
+      }
+      .grp-h .t {
+        font-size: 13px;
+        font-weight: 700;
+        letter-spacing: 0.4px;
+        color: #b9cadd;
+      }
+      .grp-h .s {
+        font-size: 11.5px;
+        color: #63788e;
+      }
+
+      .rows {
+        margin-top: 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 11px;
+      }
+      .row {
+        display: grid;
+        grid-template-columns: 280px 1fr 118px;
+        align-items: center;
+        gap: 16px;
+      }
+
+      .lbl {
+        font-size: 13.5px;
+        line-height: 1.3;
+      }
+      .lbl .n {
+        display: block;
+        color: var(--fg);
+        font-weight: 600;
+      }
+      .lbl .p {
+        display: block;
+        color: #5f7488;
+        font-size: 10.5px;
+        margin-top: 3px;
+        font-family: 'Cascadia Mono', Consolas, monospace;
+      }
+
+      .track {
+        position: relative;
+        height: 22px;
+        border-radius: 5px;
+        background: #0e151d;
+        border: 1px solid #16202b;
+        overflow: hidden;
+      }
+      .bar {
+        height: 100%;
+        border-radius: 4px;
+        background: linear-gradient(90deg, rgba(255, 107, 90, 0.95), rgba(255, 107, 90, 0.5));
+      }
+      .bar.warn {
+        background: linear-gradient(90deg, rgba(255, 194, 75, 0.92), rgba(255, 194, 75, 0.48));
+      }
+      .bar.dim {
+        background: linear-gradient(90deg, rgba(255, 194, 75, 0.55), rgba(255, 194, 75, 0.28));
+      }
+
+      .val {
+        font-size: 14px;
+        font-weight: 700;
+        text-align: right;
+        letter-spacing: -0.2px;
+      }
+      .val.hot {
+        color: var(--danger);
+      }
+      .val.mid {
+        color: var(--warn);
+      }
+      .val .tag {
+        display: block;
+        font-size: 10px;
+        font-weight: 600;
+        letter-spacing: 0.3px;
+        color: #5f7488;
+        margin-top: 3px;
+      }
+
+      .scale {
+        font-size: 10.5px;
+        color: #4f6377;
+        margin-top: 7px;
+        font-family: 'Cascadia Mono', Consolas, monospace;
+      }
+
+      .foot {
+        margin-top: 20px;
+        padding-top: 14px;
+        border-top: 1px solid var(--line);
+        display: flex;
+        gap: 22px;
+        align-items: flex-start;
+        font-size: 11.5px;
+        color: #6e8298;
+        line-height: 1.55;
+      }
+      .foot .col {
+        flex: 1;
+      }
+      .foot b {
+        color: #9fb3c7;
+        font-weight: 600;
+      }
+      code {
+        font-family: 'Cascadia Mono', Consolas, monospace;
+        font-size: 11px;
+        color: #bcd3ea;
+        background: rgba(88, 166, 255, 0.08);
+        border: 1px solid rgba(88, 166, 255, 0.18);
+        border-radius: 4px;
+        padding: 1px 5px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="glow"></div>
+    <div class="wrap">
+      <div class="head">
+        <h2>到底是谁吃了 C 盘</h2>
+        <div class="q">用 cguard scan 在真机上量出来的</div>
+      </div>
+      <div class="sub">
+        下面没有一项是你的数据。每一条要么是软件会自己重新下载的，要么是 Windows 会自己重新生成的。
+      </div>
+
+      <div class="grp">
+        <div class="grp-h">
+          <span class="t">一次性大块占用</span>
+          <span class="s">资源管理器里看不见，也不会自己过期</span>
+        </div>
+        <div class="rows">
+          <div class="row">
+            <div class="lbl">
+              <span class="n">Dell 修复快照</span>
+              <span class="p">ProgramData\Dell\SARemediation</span>
+            </div>
+            <div class="track"><div class="bar" style="width: 100%"></div></div>
+            <div class="val hot">48.5 GB<span class="tag">316 个目录</span></div>
+          </div>
+        </div>
+        <div class="scale">刻度：满格 = 48.5 GB &nbsp;|&nbsp; 2026-10-25 单次实测释放记录</div>
+      </div>
+
+      <div class="grp">
+        <div class="grp-h">
+          <span class="t">持续增长</span>
+          <span class="s">几天就长回来，随时可以清</span>
+        </div>
+        <div class="rows">
+          <div class="row">
+            <div class="lbl">
+              <span class="n">无头浏览器（Puppeteer / Playwright）</span>
+              <span class="p">.cache\puppeteer &nbsp; ms-playwright</span>
+            </div>
+            <div class="track"><div class="bar warn" style="width: 100%"></div></div>
+            <div class="val mid">2.45 GB<span class="tag">会重新下载</span></div>
+          </div>
+          <div class="row">
+            <div class="lbl">
+              <span class="n">VS Code 缓存（不含扩展）</span>
+              <span class="p">AppData\Roaming\Code</span>
+            </div>
+            <div class="track"><div class="bar warn" style="width: 44%"></div></div>
+            <div class="val mid">1.07 GB<span class="tag">会重建</span></div>
+          </div>
+          <div class="row">
+            <div class="lbl">
+              <span class="n">Codex 运行时缓存</span> <span class="p">.cache\codex-runtimes</span>
+            </div>
+            <div class="track"><div class="bar warn" style="width: 10%"></div></div>
+            <div class="val mid">245 MB<span class="tag">会重新拉取</span></div>
+          </div>
+          <div class="row">
+            <div class="lbl">
+              <span class="n">崩溃转储 + 缩略图</span>
+              <span class="p">CrashDumps &nbsp; Explorer</span>
+            </div>
+            <div class="track"><div class="bar dim" style="width: 8%"></div></div>
+            <div class="val mid">191 MB<span class="tag">会重新生成</span></div>
+          </div>
+          <div class="row">
+            <div class="lbl">
+              <span class="n">OpenCode 会话输出</span> <span class="p">.local\share\opencode</span>
+            </div>
+            <div class="track"><div class="bar dim" style="width: 1.5%"></div></div>
+            <div class="val mid">31 MB<span class="tag">保留 opencode.db</span></div>
+          </div>
+        </div>
+        <div class="scale">刻度：满格 = 2.45 GB（与上一组不同刻度）</div>
+      </div>
+
+      <div class="foot">
+        <div class="col">
+          <b>还有两类，处理方式不同：</b>卷影副本（系统还原点）和 Windows 更新下载缓存。
+          <code>cguard doctor</code> 会报出来；cguard 对卷影副本是「封顶」而不是偷偷删还原点。
+        </div>
+        <div class="col" style="flex: 0 0 290px">
+          条形长度只在组内成比例，跨组不可比。以上每一个数字都来自真实运行。
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

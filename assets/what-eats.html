@@ -1,0 +1,301 @@
+﻿<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <style>
+      :root {
+        --bg: #0a0e13;
+        --panel: #121a23;
+        --line: #1f2b3a;
+        --fg: #e9f0f7;
+        --dim: #8fa2b7;
+        --danger: #ff6b5a;
+        --warn: #ffc24b;
+        --ok: #35d399;
+        --brand: #58a6ff;
+      }
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        background: var(--bg);
+      }
+      body {
+        width: 1280px;
+        height: 800px;
+        overflow: hidden;
+        font-family:
+          'Segoe UI',
+          'Inter',
+          -apple-system,
+          sans-serif;
+        color: var(--fg);
+        -webkit-font-smoothing: antialiased;
+        position: relative;
+      }
+      .glow {
+        position: absolute;
+        width: 700px;
+        height: 700px;
+        right: -260px;
+        top: -320px;
+        background: radial-gradient(circle, rgba(255, 107, 90, 0.1), transparent 62%);
+      }
+      .wrap {
+        position: relative;
+        padding: 46px 64px 40px;
+      }
+
+      .head {
+        display: flex;
+        align-items: baseline;
+        gap: 14px;
+      }
+      h2 {
+        font-size: 33px;
+        font-weight: 700;
+        letter-spacing: -0.9px;
+      }
+      .q {
+        font-size: 14.5px;
+        color: var(--dim);
+      }
+      .sub {
+        margin-top: 9px;
+        font-size: 14px;
+        color: var(--dim);
+        max-width: 900px;
+        line-height: 1.5;
+      }
+
+      .grp {
+        margin-top: 26px;
+      }
+      .grp-h {
+        display: flex;
+        align-items: baseline;
+        gap: 11px;
+        padding-bottom: 9px;
+        border-bottom: 1px solid var(--line);
+      }
+      .grp-h .t {
+        font-size: 13px;
+        font-weight: 650;
+        letter-spacing: 0.35px;
+        text-transform: uppercase;
+        color: #b9cadd;
+      }
+      .grp-h .s {
+        font-size: 11.5px;
+        color: #63788e;
+      }
+
+      .rows {
+        margin-top: 13px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+      .row {
+        display: grid;
+        grid-template-columns: 268px 1fr 106px;
+        align-items: center;
+        gap: 16px;
+      }
+
+      .lbl {
+        font-size: 13.5px;
+        line-height: 1.28;
+      }
+      .lbl .n {
+        display: block;
+        color: var(--fg);
+        font-weight: 600;
+      }
+      .lbl .p {
+        display: block;
+        color: #5f7488;
+        font-size: 10.5px;
+        margin-top: 3px;
+        font-family: 'Cascadia Mono', Consolas, monospace;
+      }
+
+      .track {
+        position: relative;
+        height: 22px;
+        border-radius: 5px;
+        background: #0e151d;
+        border: 1px solid #16202b;
+        overflow: hidden;
+      }
+      .bar {
+        height: 100%;
+        border-radius: 4px;
+        background: linear-gradient(90deg, rgba(255, 107, 90, 0.95), rgba(255, 107, 90, 0.5));
+      }
+      .bar.warn {
+        background: linear-gradient(90deg, rgba(255, 194, 75, 0.92), rgba(255, 194, 75, 0.48));
+      }
+      .bar.dim {
+        background: linear-gradient(90deg, rgba(255, 194, 75, 0.55), rgba(255, 194, 75, 0.28));
+      }
+
+      .val {
+        font-size: 14px;
+        font-weight: 650;
+        text-align: right;
+        letter-spacing: -0.2px;
+      }
+      .val.hot {
+        color: var(--danger);
+      }
+      .val.mid {
+        color: var(--warn);
+      }
+      .val .tag {
+        display: block;
+        font-size: 10px;
+        font-weight: 600;
+        letter-spacing: 0.45px;
+        text-transform: uppercase;
+        color: #5f7488;
+        margin-top: 3px;
+      }
+
+      .scale {
+        font-size: 10.5px;
+        color: #4f6377;
+        margin-top: 8px;
+        font-family: 'Cascadia Mono', Consolas, monospace;
+      }
+
+      .foot {
+        margin-top: 24px;
+        padding-top: 16px;
+        border-top: 1px solid var(--line);
+        display: flex;
+        gap: 22px;
+        align-items: flex-start;
+        font-size: 11.5px;
+        color: #6e8298;
+        line-height: 1.55;
+      }
+      .foot .col {
+        flex: 1;
+      }
+      .foot b {
+        color: #9fb3c7;
+        font-weight: 600;
+      }
+      code {
+        font-family: 'Cascadia Mono', Consolas, monospace;
+        font-size: 11px;
+        color: #bcd3ea;
+        background: rgba(88, 166, 255, 0.08);
+        border: 1px solid rgba(88, 166, 255, 0.18);
+        border-radius: 4px;
+        padding: 1px 5px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="glow"></div>
+    <div class="wrap">
+      <div class="head">
+        <h2>What is actually eating C:</h2>
+        <div class="q">measured with cguard scan on one machine</div>
+      </div>
+      <div class="sub">
+        None of it is your data. Each entry is either something the vendor re-downloads or something
+        Windows re-generates.
+      </div>
+
+      <div class="grp">
+        <div class="grp-h">
+          <span class="t">One-time finds</span>
+          <span class="s">invisible in Explorer, never expires on its own</span>
+        </div>
+        <div class="rows">
+          <div class="row">
+            <div class="lbl">
+              <span class="n">Dell SupportAssist repair snapshots</span>
+              <span class="p">ProgramData\Dell\SARemediation</span>
+            </div>
+            <div class="track"><div class="bar" style="width: 100%"></div></div>
+            <div class="val hot">48.5 GB<span class="tag">316 folders</span></div>
+          </div>
+        </div>
+        <div class="scale">
+          scale: full bar = 48.5 GB &nbsp;|&nbsp; single logged cleanup, 2026-10-25
+        </div>
+      </div>
+
+      <div class="grp">
+        <div class="grp-h">
+          <span class="t">Ongoing growth</span>
+          <span class="s">comes back within days; safe to clear any time</span>
+        </div>
+        <div class="rows">
+          <div class="row">
+            <div class="lbl">
+              <span class="n">Headless browsers</span>
+              <span class="p">.cache\puppeteer &nbsp; ms-playwright</span>
+            </div>
+            <div class="track"><div class="bar warn" style="width: 100%"></div></div>
+            <div class="val mid">2.45 GB<span class="tag">re-downloaded</span></div>
+          </div>
+          <div class="row">
+            <div class="lbl">
+              <span class="n">VS Code cache (not extensions)</span>
+              <span class="p">AppData\Roaming\Code</span>
+            </div>
+            <div class="track"><div class="bar warn" style="width: 44%"></div></div>
+            <div class="val mid">1.07 GB<span class="tag">rebuilt</span></div>
+          </div>
+          <div class="row">
+            <div class="lbl">
+              <span class="n">Codex runtime cache</span>
+              <span class="p">.cache\codex-runtimes</span>
+            </div>
+            <div class="track"><div class="bar warn" style="width: 10%"></div></div>
+            <div class="val mid">245 MB<span class="tag">re-fetched</span></div>
+          </div>
+          <div class="row">
+            <div class="lbl">
+              <span class="n">Crash dumps + thumbnails</span>
+              <span class="p">CrashDumps &nbsp; Explorer</span>
+            </div>
+            <div class="track"><div class="bar dim" style="width: 8%"></div></div>
+            <div class="val mid">191 MB<span class="tag">regenerated</span></div>
+          </div>
+          <div class="row">
+            <div class="lbl">
+              <span class="n">OpenCode session output</span>
+              <span class="p">.local\share\opencode</span>
+            </div>
+            <div class="track"><div class="bar dim" style="width: 1.5%"></div></div>
+            <div class="val mid">31 MB<span class="tag">keeps opencode.db</span></div>
+          </div>
+        </div>
+        <div class="scale">scale: full bar = 2.45 GB (separate scale from the group above)</div>
+      </div>
+
+      <div class="foot">
+        <div class="col">
+          <b>Also growing, cleared differently:</b> volume shadow copies (System Restore) and
+          Windows Update downloads. <code>cguard doctor</code> reports them; cguard caps shadow
+          storage instead of deleting restore points silently.
+        </div>
+        <div class="col" style="flex: 0 0 300px">
+          Bars are proportional within their own group, not across groups. Every figure above came
+          from a real run.
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
+
+

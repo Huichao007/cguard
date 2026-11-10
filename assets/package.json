@@ -1,0 +1,14 @@
+﻿{
+  "name": "cguard-assets",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Diagram sources for the cguard README. Rendered with headless Chromium so every number stays exact.",
+  "scripts": {
+    "render": "node render.mjs",
+    "render:zh": "node render.mjs zh-hero && node render.mjs zh-what-eats"
+  },
+  "devDependencies": {
+    "playwright": "^1.40.0"
+  }
+}

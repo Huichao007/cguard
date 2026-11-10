@@ -1,22 +1,26 @@
 <div align="center">
 
+<img src="assets/zh-hero.png" alt="cguard: AI 工具把 C 盘写满了，一条命令把空间还回来" width="880">
+
 # cguard
 
 **让 Windows 的 C 盘不再被 AI 编程工具悄悄塞满。**
 
-OpenCode、Codex、WorkBuddy、Claude Desktop、Cursor 每天都会往 C 盘写缓存、
-运行时、浏览器内核和日志。cguard 把它们全部量出来，安全的部分清掉，并把增长
-搬到别的盘。
-
 `Windows 10/11` · `PowerShell 5.1+` · `零依赖` · `MIT`
-
-```
-C: 共 257.4 GB，剩余 30.1 GB  ->  142.6 GB
-```
 
 [English](README.md) · [更新日志](CHANGELOG.md) · [参与贡献](CONTRIBUTING.md)
 
 </div>
+
+---
+
+## 先看效果
+
+一台真实的机器：C 盘可用空间从 **30.1 GB** 回到 **142.6 GB**，没有删掉任何用户数据。
+
+<img src="assets/zh-what-eats.png" alt="到底是谁吃了 C 盘：Dell 修复快照 48.5GB，无头浏览器 2.45GB，VS Code 缓存 1.07GB，Codex 运行时 245MB，崩溃转储 191MB，OpenCode 会话输出 31MB" width="880">
+
+> 上图每个数字都来自 `cguard scan` 的真实输出。条形长度只在组内成比例，跨组不可比。
 
 ---
 
@@ -116,6 +120,8 @@ cguard watch -Uninstall          # 先删计划任务
 （`-Uninstall` 需要你能找到 install.ps1，或用 `install.ps1` 的完整路径。）
 
 ## 四、怎么用（四个命令）
+
+<img src="assets/how-it-works.png" alt="三步：cguard scan 查看、cguard clean 预览、cguard clean -Force 执行；安装只需一行命令" width="880">
 
 | 命令       | 作用                                        | 会删东西吗         |
 | ---------- | ------------------------------------------- | ------------------ |

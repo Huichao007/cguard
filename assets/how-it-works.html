@@ -1,0 +1,296 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <style>
+      :root {
+        --bg: #0a0e13;
+        --panel: #121a23;
+        --line: #1f2b3a;
+        --fg: #e9f0f7;
+        --dim: #8fa2b7;
+        --danger: #ff6b5a;
+        --ok: #35d399;
+        --brand: #58a6ff;
+        --warn: #ffc24b;
+      }
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        background: var(--bg);
+      }
+      body {
+        width: 1280px;
+        min-height: 560px;
+        overflow: hidden;
+        font-family:
+          'Segoe UI',
+          'Inter',
+          -apple-system,
+          sans-serif;
+        color: var(--fg);
+        -webkit-font-smoothing: antialiased;
+        position: relative;
+      }
+      .mono {
+        font-family: 'Cascadia Mono', 'SF Mono', Consolas, monospace;
+      }
+      .glow {
+        position: absolute;
+        width: 820px;
+        height: 820px;
+        left: 50%;
+        top: -520px;
+        transform: translateX(-50%);
+        background: radial-gradient(circle, rgba(88, 166, 255, 0.13), transparent 62%);
+      }
+      .wrap {
+        position: relative;
+        padding: 46px 60px 40px;
+      }
+
+      h2 {
+        font-size: 33px;
+        font-weight: 700;
+        letter-spacing: -0.9px;
+        text-align: center;
+      }
+      .sub {
+        margin-top: 10px;
+        font-size: 14.5px;
+        color: var(--dim);
+        text-align: center;
+      }
+      .sub code {
+        font-family: 'Cascadia Mono', Consolas, monospace;
+        font-size: 13px;
+        color: #cfe4ff;
+        background: rgba(88, 166, 255, 0.1);
+        border: 1px solid rgba(88, 166, 255, 0.22);
+        border-radius: 5px;
+        padding: 2px 7px;
+      }
+
+      .steps {
+        margin-top: 34px;
+        display: grid;
+        grid-template-columns: 1fr 34px 1fr 34px 1fr;
+        align-items: stretch;
+        gap: 0;
+      }
+
+      .step {
+        background: linear-gradient(180deg, rgba(18, 26, 35, 0.95), rgba(13, 19, 26, 0.95));
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        padding: 20px 20px 18px;
+        display: flex;
+        flex-direction: column;
+      }
+      .step .no {
+        font-size: 10.5px;
+        letter-spacing: 1.1px;
+        text-transform: uppercase;
+        color: #5f7488;
+        font-weight: 650;
+      }
+      .step .t {
+        margin-top: 7px;
+        font-size: 17px;
+        font-weight: 680;
+        letter-spacing: -0.3px;
+      }
+      .step .d {
+        margin-top: 8px;
+        font-size: 12.5px;
+        line-height: 1.5;
+        color: var(--dim);
+        flex: 1;
+      }
+      .step .cmd {
+        margin-top: 14px;
+        background: #0b1219;
+        border: 1px solid #1a2634;
+        border-radius: 7px;
+        padding: 9px 11px;
+        font-family: 'Cascadia Mono', Consolas, monospace;
+        font-size: 12px;
+        color: #cfe4ff;
+        white-space: nowrap;
+        overflow: hidden;
+      }
+      .step .cmd .p {
+        color: #4f6377;
+      }
+
+      .step.now {
+        border-color: rgba(88, 166, 255, 0.4);
+      }
+      .step.now .no {
+        color: var(--brand);
+      }
+      .step.go .no {
+        color: var(--ok);
+      }
+
+      .arw {
+        display: grid;
+        place-items: center;
+      }
+      .arw svg {
+        opacity: 0.42;
+      }
+
+      .band {
+        margin-top: 26px;
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 14px;
+      }
+      .fact {
+        background: rgba(18, 26, 35, 0.6);
+        border: 1px solid var(--line);
+        border-radius: 11px;
+        padding: 14px 16px;
+      }
+      .fact .k {
+        font-size: 10.5px;
+        letter-spacing: 0.9px;
+        text-transform: uppercase;
+        color: #5f7488;
+        font-weight: 650;
+      }
+      .fact .v {
+        margin-top: 7px;
+        font-size: 13px;
+        line-height: 1.45;
+        color: #c6d6e6;
+      }
+      .fact .v b {
+        color: var(--fg);
+        font-weight: 650;
+      }
+
+      .install {
+        margin-top: 22px;
+        background: #0b1219;
+        border: 1px solid #1a2634;
+        border-radius: 10px;
+        padding: 15px 18px;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+      }
+      .install .lbl {
+        font-size: 10.5px;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        color: #5f7488;
+        font-weight: 650;
+        flex: 0 0 auto;
+      }
+      .install .c {
+        font-family: 'Cascadia Mono', Consolas, monospace;
+        font-size: 13px;
+        color: #8ee6bf;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .install .c .hl {
+        color: #5f7488;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="glow"></div>
+    <div class="wrap">
+      <h2>Look, preview, act</h2>
+      <div class="sub">
+        That is the whole workflow. Nothing is deleted until you add <code>-Force</code>.
+      </div>
+
+      <div class="steps">
+        <div class="step">
+          <div class="no">Step 1 &middot; look</div>
+          <div class="t">Scan</div>
+          <div class="d">Measure every known bloat location and print a table. Read-only.</div>
+          <div class="cmd"><span class="p">&gt;</span> cguard scan</div>
+        </div>
+
+        <div class="arw">
+          <svg width="20" height="14" viewBox="0 0 20 14" fill="none">
+            <path
+              d="M1 7h15M11 2l5 5-5 5"
+              stroke="#8FA2B7"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+          </svg>
+        </div>
+
+        <div class="step">
+          <div class="no">Step 2 &middot; preview</div>
+          <div class="t">Clean (dry run)</div>
+          <div class="d">Shows what would be reclaimed and names the biggest single win.</div>
+          <div class="cmd"><span class="p">&gt;</span> cguard clean</div>
+        </div>
+
+        <div class="arw">
+          <svg width="20" height="14" viewBox="0 0 20 14" fill="none">
+            <path
+              d="M1 7h15M11 2l5 5-5 5"
+              stroke="#8FA2B7"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+          </svg>
+        </div>
+
+        <div class="step go">
+          <div class="no">Step 3 &middot; act</div>
+          <div class="t">Clean -Force</div>
+          <div class="d">
+            Reclaims cache and app tiers. Your documents, repos and settings are never in scope.
+          </div>
+          <div class="cmd"><span class="p">&gt;</span> cguard clean -Force</div>
+        </div>
+      </div>
+
+      <div class="band">
+        <div class="fact">
+          <div class="k">Why it is safe</div>
+          <div class="v">Three tiers. <b>review</b> tier is measured, never deleted.</div>
+        </div>
+        <div class="fact">
+          <div class="k">Databases survive</div>
+          <div class="v">
+            A <b>keep</b> list protects files like <b>opencode.db</b> inside cleaned folders.
+          </div>
+        </div>
+        <div class="fact">
+          <div class="k">Agents keep working</div>
+          <div class="v"><b>minAgeDays</b> leaves anything written recently alone.</div>
+        </div>
+        <div class="fact">
+          <div class="k">Stop the regrowth</div>
+          <div class="v"><b>relocate</b> moves package and browser caches to another drive.</div>
+        </div>
+      </div>
+
+      <div class="install">
+        <div class="lbl">Install</div>
+        <div class="c">
+          <span class="hl">PS&gt;</span> irm
+          https://raw.githubusercontent.com/Huichao007/cguard/main/install.ps1 | iex
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

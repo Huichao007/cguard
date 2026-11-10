@@ -1,5 +1,7 @@
 <div align="center">
 
+<img src="assets/hero.png" alt="cguard: your AI tools filled C:, one command gives it back. 30.1 GB free before, 142.6 GB after." width="880">
+
 # cguard
 
 **Keep the Windows C: drive from filling up while AI coding agents run.**
@@ -9,10 +11,6 @@ anyone thinks to look. cguard measures every place they hide, reclaims the ones
 that are safe, and moves the growth off the system drive for good.
 
 `Windows 10/11` · `PowerShell 5.1+` · `no dependencies` · `MIT`
-
-```
-C: 257.4 GB total / 30.1 GB free  ->  142.6 GB free
-```
 
 [中文](README.zh-CN.md) · [Changelog](CHANGELOG.md) · [Contributing](CONTRIBUTING.md)
 
@@ -90,6 +88,11 @@ your own toolchain.** Run both — they do not conflict.
 
 ## The problem
 
+<img src="assets/what-eats.png" alt="What is actually eating C:: Dell repair snapshots 48.5 GB, headless browsers 2.45 GB, VS Code cache 1.07 GB, Codex runtime 245 MB, crash dumps 191 MB, OpenCode session output 31 MB" width="880">
+
+Every figure above came from a real `cguard scan`. Bars are proportional within
+each group, not across groups.
+
 A modern agentic toolchain quietly writes to `C:` all day long:
 
 | Where                                           | Grows because                                        |
@@ -123,6 +126,8 @@ The design rule is blunt: **a target is deleted only if deleting it costs
 nothing but a re-download.** Anything else is reported, never touched.
 
 ## Quick start
+
+<img src="assets/how-it-works.png" alt="Look, preview, act: cguard scan, cguard clean, cguard clean -Force, plus install in one line" width="880">
 
 ```powershell
 git clone https://github.com/Huichao007/cguard.git
