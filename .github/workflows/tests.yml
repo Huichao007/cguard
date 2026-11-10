@@ -55,7 +55,9 @@ jobs:
       - name: Clean refuses to delete without -Force
         shell: powershell
         run: |
-          $out = & .\cguard.ps1 clean -NoColor 2>&1 | Out-String
+          # *>&1 (not 2>&1): Write-Host goes to the information stream, so 2>&1
+          # misses it and $out would be empty even though the text is on screen.
+          $out = & .\cguard.ps1 clean -NoColor *>&1 | Out-String
           Write-Host $out
           if ($out -notmatch 'nothing was deleted') { throw 'dry run did not refuse to delete' }
 
@@ -107,6 +109,8 @@ jobs:
       - name: Clean refuses to delete without -Force
         shell: pwsh
         run: |
-          $out = & .\cguard.ps1 clean -NoColor 2>&1 | Out-String
+          # *>&1 (not 2>&1): Write-Host goes to the information stream, so 2>&1
+          # misses it and $out would be empty even though the text is on screen.
+          $out = & .\cguard.ps1 clean -NoColor *>&1 | Out-String
           Write-Host $out
           if ($out -notmatch 'nothing was deleted') { throw 'dry run did not refuse to delete' }
