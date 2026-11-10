@@ -1,0 +1,25 @@
+{
+  "name": "cguard",
+  "version": "1.0.0",
+  "description": "Keep the Windows C: drive from filling up while AI coding agents run.",
+  "private": true,
+  "scripts": {
+    "test": "powershell -NoProfile -ExecutionPolicy Bypass -File ./tests/test-cguard.ps1",
+    "scan": "powershell -NoProfile -ExecutionPolicy Bypass -File ./cguard.ps1 scan",
+    "clean:dry": "powershell -NoProfile -ExecutionPolicy Bypass -File ./cguard.ps1 clean",
+    "doctor": "powershell -NoProfile -ExecutionPolicy Bypass -File ./cguard.ps1 doctor"
+  },
+  "keywords": [
+    "windows",
+    "disk-space",
+    "cleanup",
+    "powershell",
+    "ai-agents",
+    "opencode",
+    "codex",
+    "workbuddy",
+    "devtools"
+  ],
+  "license": "MIT",
+  "author": "Huichao007"
+}

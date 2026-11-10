@@ -1,0 +1,7 @@
+{
+  "lowSpaceWarnGB": 20,
+  "lowSpaceAlertGB": 10,
+  "hardReserveGB": 5,
+  "watchTiers": ["safe"],
+  "keepRecentHours": 2
+}

@@ -1,0 +1,6 @@
+# Generated / machine-local - never commit
+*.log
+*.tmp
+%LOCALAPPDATA%
+report.md
+reports/

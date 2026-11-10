@@ -1,0 +1,385 @@
+{
+  "$schema": "./targets.schema.json",
+  "version": "1.0.0",
+  "updated": "2026-11-10",
+  "notes": [
+    "tier=safe   : pure cache / temp. Deleting costs re-download or a cold start only.",
+    "tier=apps   : runtime + model files of AI coding agents. Safe to delete, but the agent re-downloads them on next start.",
+    "tier=review : real data (sessions, settings, projects). Never deleted by 'clean'; only ever reported, and only with -Deep.",
+    "'keep' lists names that must never be removed even inside a target path (databases, live logs)."
+  ],
+  "targets": [
+    {
+      "id": "temp-user",
+      "tier": "safe",
+      "group": "windows",
+      "label": "User TEMP",
+      "description": "Per-user scratch space. Locked files are skipped automatically.",
+      "paths": ["%LOCALAPPDATA%\\Temp"],
+      "minAgeDays": 0,
+      "keep": [],
+      "reclaim": "delete-contents"
+    },
+    {
+      "id": "temp-windows",
+      "tier": "safe",
+      "group": "windows",
+      "label": "Windows TEMP",
+      "description": "Machine-wide scratch space. Needs Administrator for the locked subset.",
+      "paths": ["%WINDIR%\\Temp"],
+      "minAgeDays": 0,
+      "keep": [],
+      "reclaim": "delete-contents",
+      "requiresAdmin": true
+    },
+    {
+      "id": "windows-update-cache",
+      "tier": "safe",
+      "group": "windows",
+      "label": "Windows Update download cache",
+      "description": "Already-installed update payloads. Windows re-fetches anything still needed.",
+      "paths": ["%WINDIR%\\SoftwareDistribution\\Download"],
+      "minAgeDays": 3,
+      "keep": [],
+      "reclaim": "delete-contents",
+      "requiresAdmin": true,
+      "stopBefore": ["wuauserv", "bits"],
+      "stopAfter": ["wuauserv", "bits"]
+    },
+    {
+      "id": "windows-delivery-optimization",
+      "tier": "safe",
+      "group": "windows",
+      "label": "Delivery Optimization cache",
+      "description": "Peer-to-peer update chunks. Cleared through the official cmdlet, not by hand.",
+      "paths": ["%WINDIR%\\SoftwareDistribution\\DeliveryOptimization"],
+      "minAgeDays": 0,
+      "keep": [],
+      "reclaim": "cmdlet",
+      "cmdlet": "Delete-DeliveryOptimizationCache -Force",
+      "requiresAdmin": true
+    },
+    {
+      "id": "crash-dumps",
+      "tier": "safe",
+      "group": "windows",
+      "label": "Crash dumps",
+      "description": "Kernel and user-mode minidumps. Only useful if you are actively debugging a crash.",
+      "paths": [
+        "%LOCALAPPDATA%\\CrashDumps",
+        "%WINDIR%\\Minidump",
+        "%LOCALAPPDATA%\\Microsoft\\Windows\\WER"
+      ],
+      "minAgeDays": 7,
+      "keep": [],
+      "reclaim": "delete-contents"
+    },
+    {
+      "id": "thumbnail-cache",
+      "tier": "safe",
+      "group": "windows",
+      "label": "Explorer thumbnail + icon cache",
+      "description": "Rebuilt on demand. Explorer may hold locks; run 'cguard clean -Admin' for the full clear.",
+      "paths": ["%LOCALAPPDATA%\\Microsoft\\Windows\\Explorer"],
+      "minAgeDays": 0,
+      "keep": [],
+      "reclaim": "delete-contents"
+    },
+    {
+      "id": "winre-agent",
+      "tier": "safe",
+      "group": "windows",
+      "label": "$WinREAgent staging",
+      "description": "Leftovers from a recovery-partition update. Almost always multi-GB and never needed afterwards.",
+      "paths": ["C:\\$WinREAgent"],
+      "minAgeDays": 7,
+      "keep": [],
+      "reclaim": "delete-contents",
+      "requiresAdmin": true
+    },
+
+    {
+      "id": "opencode-data",
+      "tier": "apps",
+      "group": "ai-agents",
+      "label": "OpenCode agent data",
+      "description": "Shell output, tool output and logs of every OpenCode session. This is the folder that quietly eats tens of GB.",
+      "paths": ["%USERPROFILE%\\.local\\share\\opencode"],
+      "minAgeDays": 0,
+      "keep": ["opencode.db", "opencode.db-wal", "opencode.db-shm", "auth.json"],
+      "subdirs": [
+        { "name": "shell", "minAgeDays": 14 },
+        { "name": "tool-output", "minAgeDays": 30 },
+        { "name": "log", "minAgeDays": 7 },
+        { "name": "snapshot", "minAgeDays": 30 }
+      ],
+      "reclaim": "subdirs"
+    },
+    {
+      "id": "codex-runtimes",
+      "tier": "apps",
+      "group": "ai-agents",
+      "label": "Codex runtime cache",
+      "description": "Downloaded Codex primary runtime. Re-fetched on next launch; ~250 MB each.",
+      "paths": ["%USERPROFILE%\\.cache\\codex-runtimes"],
+      "minAgeDays": 0,
+      "keep": [],
+      "reclaim": "delete-contents"
+    },
+    {
+      "id": "codex-home",
+      "tier": "review",
+      "group": "ai-agents",
+      "label": "Codex home (CODEX_HOME)",
+      "description": "Sessions, skills, config. NOT a cache. Only report it; clean it by hand if you really mean it.",
+      "paths": ["%USERPROFILE%\\.codex", "%CODEX_HOME%"],
+      "minAgeDays": 0,
+      "keep": ["config.toml"],
+      "reclaim": "report-only"
+    },
+    {
+      "id": "claude-desktop-cache",
+      "tier": "safe",
+      "group": "ai-agents",
+      "label": "Claude Desktop renderer cache",
+      "description": "Electron Cache/GPUCache/Code Cache only. Conversations and config are untouched.",
+      "paths": [],
+      "explicitPaths": [
+        "%APPDATA%\\Claude\\Cache",
+        "%APPDATA%\\Claude\\GPUCache",
+        "%APPDATA%\\Claude\\Code Cache",
+        "%APPDATA%\\Claude\\DawnWebGPUCache",
+        "%APPDATA%\\Claude\\DawnGraphiteCache",
+        "%APPDATA%\\Claude\\SharedStorage"
+      ],
+      "minAgeDays": 0,
+      "keep": [],
+      "reclaim": "delete-contents"
+    },
+    {
+      "id": "workbuddy-cache",
+      "tier": "safe",
+      "group": "ai-agents",
+      "label": "WorkBuddy / CodeBuddy cache",
+      "description": "Electron caches and rotated logs. Never touches the login state under Local State.",
+      "paths": [],
+      "explicitPaths": [
+        "%APPDATA%\\WorkBuddy\\Cache",
+        "%APPDATA%\\WorkBuddy\\GPUCache",
+        "%APPDATA%\\WorkBuddy\\Code Cache",
+        "%APPDATA%\\CodeBuddy\\Cache",
+        "%APPDATA%\\CodeBuddy\\GPUCache",
+        "%LOCALAPPDATA%\\WorkBuddy\\logs"
+      ],
+      "minAgeDays": 3,
+      "keep": [],
+      "reclaim": "delete-contents"
+    },
+    {
+      "id": "cursor-cache",
+      "tier": "safe",
+      "group": "ai-agents",
+      "label": "Cursor cache",
+      "description": "Renderer + extension caches. Your chat history lives in state.vscdb and is not touched.",
+      "paths": [],
+      "explicitPaths": [
+        "%APPDATA%\\Cursor\\Cache",
+        "%APPDATA%\\Cursor\\CachedData",
+        "%APPDATA%\\Cursor\\GPUCache",
+        "%APPDATA%\\Cursor\\Code Cache",
+        "%APPDATA%\\Cursor\\CachedExtensionVSIXs",
+        "%APPDATA%\\Cursor\\logs"
+      ],
+      "minAgeDays": 3,
+      "keep": [],
+      "reclaim": "delete-contents"
+    },
+    {
+      "id": "vscode-cache",
+      "tier": "safe",
+      "group": "editors",
+      "label": "VS Code cache (not extensions)",
+      "description": "Caches and downloaded VSIX installers. Extensions themselves are left alone.",
+      "paths": [],
+      "explicitPaths": [
+        "%APPDATA%\\Code\\Cache",
+        "%APPDATA%\\Code\\CachedData",
+        "%APPDATA%\\Code\\CachedExtensionVSIXs",
+        "%APPDATA%\\Code\\GPUCache",
+        "%APPDATA%\\Code\\logs"
+      ],
+      "minAgeDays": 3,
+      "keep": [],
+      "reclaim": "delete-contents"
+    },
+    {
+      "id": "vscode-extensions",
+      "tier": "review",
+      "group": "editors",
+      "label": "VS Code extensions",
+      "description": "Frequently 1-2 GB. Real functionality, so listing only. Uninstall from inside VS Code.",
+      "paths": ["%USERPROFILE%\\.vscode\\extensions"],
+      "minAgeDays": 0,
+      "keep": [],
+      "reclaim": "report-only"
+    },
+    {
+      "id": "npm-cache",
+      "tier": "safe",
+      "group": "toolchains",
+      "label": "npm cache",
+      "description": "Content-addressed package cache. 'npm cache verify' would rebuild part of it anyway.",
+      "paths": ["%LOCALAPPDATA%\\npm-cache", "%APPDATA%\\npm-cache"],
+      "minAgeDays": 0,
+      "keep": [],
+      "reclaim": "delete-contents"
+    },
+    {
+      "id": "npm-global-store",
+      "tier": "review",
+      "group": "toolchains",
+      "label": "npm global install root",
+      "description": "Installed global CLIs (opencode, codex, ...). Deleting this breaks your tools. Report only.",
+      "paths": ["%APPDATA%\\npm", "D:\\Software\\npm-global"],
+      "minAgeDays": 0,
+      "keep": [],
+      "reclaim": "report-only"
+    },
+    {
+      "id": "pnpm-store",
+      "tier": "safe",
+      "group": "toolchains",
+      "label": "pnpm store",
+      "description": "Global content store. Safe to prune; pnpm hard-links from it.",
+      "paths": ["%LOCALAPPDATA%\\pnpm\\store", "%LOCALAPPDATA%\\pnpm-store"],
+      "minAgeDays": 30,
+      "keep": [],
+      "reclaim": "delete-contents"
+    },
+    {
+      "id": "yarn-cache",
+      "tier": "safe",
+      "group": "toolchains",
+      "label": "Yarn cache",
+      "description": "Offline mirror of downloaded packages.",
+      "paths": ["%LOCALAPPDATA%\\Yarn\\Cache"],
+      "minAgeDays": 30,
+      "keep": [],
+      "reclaim": "delete-contents"
+    },
+    {
+      "id": "bun-cache",
+      "tier": "safe",
+      "group": "toolchains",
+      "label": "Bun install cache",
+      "description": "Bun's package cache.",
+      "paths": ["%USERPROFILE%\\.bun\\install\\cache", "%LOCALAPPDATA%\\bun\\install\\cache"],
+      "minAgeDays": 30,
+      "keep": [],
+      "reclaim": "delete-contents"
+    },
+    {
+      "id": "uv-cache",
+      "tier": "safe",
+      "group": "toolchains",
+      "label": "uv (Python) cache",
+      "description": "Wheels and sdists kept by uv.",
+      "paths": ["%LOCALAPPDATA%\\uv\\cache"],
+      "minAgeDays": 30,
+      "keep": [],
+      "reclaim": "delete-contents"
+    },
+    {
+      "id": "pip-cache",
+      "tier": "safe",
+      "group": "toolchains",
+      "label": "pip cache",
+      "description": "Downloaded wheels. 'pip cache purge' is the official route.",
+      "paths": ["%LOCALAPPDATA%\\pip\\Cache"],
+      "minAgeDays": 30,
+      "keep": [],
+      "reclaim": "delete-contents"
+    },
+    {
+      "id": "cargo-registry",
+      "tier": "safe",
+      "group": "toolchains",
+      "label": "Cargo registry + git cache",
+      "description": "Rust crate sources and checkouts.",
+      "paths": ["%USERPROFILE%\\.cargo\\registry"],
+      "minAgeDays": 60,
+      "keep": [],
+      "reclaim": "delete-contents"
+    },
+    {
+      "id": "browser-automation",
+      "tier": "apps",
+      "group": "ai-agents",
+      "label": "Headless browser binaries",
+      "description": "Puppeteer's Chromium download and Playwright's browser bundles. Re-downloaded on next automation run.",
+      "paths": [
+        "%USERPROFILE%\\.cache\\puppeteer",
+        "%LOCALAPPDATA%\\ms-playwright",
+        "%USERPROFILE%\\.cache\\ms-playwright"
+      ],
+      "minAgeDays": 0,
+      "keep": [],
+      "reclaim": "delete-contents"
+    },
+    {
+      "id": "browser-cache",
+      "tier": "safe",
+      "group": "browsers",
+      "label": "Browser HTTP caches",
+      "description": "Edge and Chrome profile caches. Cookies, history and logins are NOT here.",
+      "paths": [],
+      "explicitPaths": [
+        "%LOCALAPPDATA%\\Microsoft\\Edge\\User Data\\Default\\Cache",
+        "%LOCALAPPDATA%\\Microsoft\\Edge\\User Data\\Default\\Code Cache",
+        "%LOCALAPPDATA%\\Microsoft\\Edge\\User Data\\Default\\GPUCache",
+        "%LOCALAPPDATA%\\Google\\Chrome\\User Data\\Default\\Cache",
+        "%LOCALAPPDATA%\\Google\\Chrome\\User Data\\Default\\Code Cache",
+        "%LOCALAPPDATA%\\Google\\Chrome\\User Data\\Default\\GPUCache"
+      ],
+      "minAgeDays": 7,
+      "keep": [],
+      "reclaim": "delete-contents"
+    },
+    {
+      "id": "docker-wsl",
+      "tier": "review",
+      "group": "containers",
+      "label": "Docker / WSL disk images",
+      "description": "ext4.vhdx files. These are real disks; shrink them with 'wsl --manage ... --set-sparse' or Docker Desktop, never by deleting.",
+      "paths": ["%LOCALAPPDATA%\\Docker\\wsl"],
+      "minAgeDays": 0,
+      "keep": [],
+      "reclaim": "report-only"
+    },
+    {
+      "id": "dell-repair-snapshots",
+      "tier": "apps",
+      "group": "oem",
+      "label": "Dell SupportAssist repair snapshots",
+      "description": "The single biggest offender on Dell machines: SARemediation keeps a full pre-repair image. 48 GB reclaimed here in one run.",
+      "paths": ["%PROGRAMDATA%\\Dell\\SARemediation\\SystemRepair\\Snapshots"],
+      "minAgeDays": 0,
+      "keep": [],
+      "reclaim": "delete-contents",
+      "requiresAdmin": true
+    },
+    {
+      "id": "hiberfil",
+      "tier": "review",
+      "group": "windows",
+      "label": "hiberfil.sys / pagefile.sys",
+      "description": "Not a folder. Disable hibernation with 'powercfg -h off' if you never use it; that frees RAM-sized GB instantly.",
+      "paths": [],
+      "explicitPaths": ["C:\\hiberfil.sys", "C:\\pagefile.sys", "C:\\swapfile.sys"],
+      "minAgeDays": 0,
+      "keep": [],
+      "reclaim": "report-only",
+      "requiresAdmin": true
+    }
+  ]
+}
