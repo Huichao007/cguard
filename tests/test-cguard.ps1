@@ -205,6 +205,21 @@ $doc5 = Get-ScanJson -TargetsFile $targets5 -Extra @('-Only', 'beta')
 Assert-Equal 1 @($doc5.targets).Count '-Only selected exactly one target'
 Assert-Equal 'beta' $doc5.targets[0].id 'the selected target is beta'
 
+$doc5b = Get-ScanJson -TargetsFile $targets5 -Extra @('-Tier', 'apps')
+Assert-Equal 0 @($doc5b.targets).Count '-Tier excludes targets in other tiers'
+
+# ------------------------------------------------------------------ case 7b
+Write-Host ''
+Write-Host 'case 7b: watch task command stays under the schtasks 261-char limit'
+$watchOut = Invoke-Cguard @('watch')
+if ($watchOut -match 'length\s+:\s+(\d+) chars') {
+    $len = [int]$Matches[1]
+    Assert-True ($len -le 261) ("scheduled command is $len chars, within limit")
+} else {
+    Assert-True $false 'watch dry run reported a command length'
+}
+Assert-True ($watchOut -match 'auto-skip|below .* GB|-Auto') 'watch task is gated on free space'
+
 # ------------------------------------------------------------------ case 8
 Write-Host ''
 Write-Host 'case 8: report-only targets are never deleted'

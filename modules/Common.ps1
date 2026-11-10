@@ -291,6 +291,7 @@ function Select-CgTargets {
     param(
         [Parameter(Mandatory = $true)]$Document,
         [string]$Only = '',
+        [string]$Tier = '',
         [switch]$Deep
     )
 
@@ -300,6 +301,11 @@ function Select-CgTargets {
     if ($Only) {
         $want = @($Only.Split(',') | ForEach-Object { $_.Trim() } | Where-Object { $_ })
         $list = @($list | Where-Object { $want -contains $_.id })
+    }
+
+    if ($Tier) {
+        $tiers = @($Tier.Split(',') | ForEach-Object { $_.Trim() } | Where-Object { $_ })
+        $list = @($list | Where-Object { $tiers -contains $_.tier })
     }
 
     if (-not $Deep) {

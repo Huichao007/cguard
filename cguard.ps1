@@ -1,4 +1,4 @@
-#Requires -Version 5.1
+﻿#Requires -Version 5.1
 <#
 .SYNOPSIS
     cguard - keep a Windows C: drive from silently filling up while AI coding
@@ -56,6 +56,8 @@ param(
     [string]$Command = 'help',
 
     [string]$Only = '',
+
+    [string]$Tier = '',
 
     [switch]$Deep,
 
@@ -126,7 +128,7 @@ function Get-CgPolicy {
 
 function Invoke-CgScan {
     $doc = Get-CgTargets
-    $list = Select-CgTargets -Document $doc -Only $Only -Deep:$Deep
+    $list = Select-CgTargets -Document $doc -Only $Only -Tier $Tier -Deep:$Deep
     $policy = Get-CgPolicy
 
     if ($Json) { $script:CgQuiet = $true }
@@ -204,8 +206,8 @@ function Invoke-CgScan {
     } else {
         Write-CgOk 'C: free space is above the warning line'
     }
-    Write-CgInfo 'next: .\cguard.ps1 clean            (dry run)'
-    Write-CgInfo '      .\cguard.ps1 clean -Force     (reclaim)'
+    Write-CgInfo ('next: {0} clean            (dry run)' -f (Get-CgInvoke))
+    Write-CgInfo ('      {0} clean -Force     (reclaim)' -f (Get-CgInvoke))
 }
 
 # ---------------------------------------------------------------- clean
@@ -220,7 +222,7 @@ function Get-CgTargetEffectivePaths {
 
 function Invoke-CgClean {
     $doc = Get-CgTargets
-    $list = Select-CgTargets -Document $doc -Only $Only -Deep:$Deep
+    $list = Select-CgTargets -Document $doc -Only $Only -Tier $Tier -Deep:$Deep
     $policy = Get-CgPolicy
 
     $isAdmin = Test-CgAdmin
@@ -371,7 +373,7 @@ function Invoke-CgClean {
         Write-CgInfo 'nothing was deleted. re-run with -Force to execute.'
         $biggest = $results | Sort-Object bytes -Descending | Select-Object -First 1
         if ($biggest -and $biggest.bytes -gt 0) {
-            Write-CgInfo ('biggest single win: .\cguard.ps1 clean -Force -Only {0}' -f $biggest.id)
+            Write-CgInfo ('biggest single win: {0} clean -Force -Only {1}' -f (Get-CgInvoke), $biggest.id)
         }
     }
     if ($totalFailed -gt 0) {
@@ -381,6 +383,16 @@ function Invoke-CgClean {
     Write-CgAudit -Results $results -TotalBytes $totalBytes -Force $Force -FreeBefore $free0
 
     if ($ReportPath) { Write-CgMarkdownReport -Results $results -Path $ReportPath }
+}
+
+function Get-CgInvoke {
+    # "cguard" when installed with the .cmd shim, otherwise ".\cguard.ps1"
+    if ($script:CgShim -eq $null) {
+        $shim = Join-Path $script:CgRoot 'cguard.cmd'
+        $script:CgShim = [bool](Test-CgExists $shim)
+    }
+    if ($script:CgShim) { return 'cguard' }
+    return '.\cguard.ps1'
 }
 
 function Write-CgAudit {
@@ -526,7 +538,7 @@ function Invoke-CgDoctor {
         if ($a.Current -and $a.Current -notmatch '^C:') { $note = ' (already off C:)' }
         Write-Host ('  {0,-26} {1}{2}' -f $a.Name, $mark, $note)
     }
-    Write-CgInfo ('run: .\cguard.ps1 relocate -ToDrive {0} -Force   to move caches off C: permanently' -f $ToDrive)
+    Write-CgInfo ('run: {0} relocate -ToDrive {1} -Force   to move caches off C: permanently' -f (Get-CgInvoke), $ToDrive)
     Write-Host ''
 }
 
@@ -604,10 +616,10 @@ function Invoke-CgRelocate {
     Write-Host ''
     if ($Force) {
         Write-CgOk ('{0} variables updated. Restart your agents for them to take effect.' -f $changed)
-        Write-CgInfo 'undo: set the same variables back to empty, or run: .\cguard.ps1 relocate -Force -ToDrive <letter>'
+        Write-CgInfo ('undo: set the same variables back to empty, or run: {0} relocate -Force -ToDrive <letter>' -f (Get-CgInvoke))
     } else {
         Write-CgOk 'dry run: nothing was written'
-        Write-CgInfo ('run: .\cguard.ps1 relocate -ToDrive {0} -Force' -f $ToDrive)
+        Write-CgInfo ('run: {0} relocate -ToDrive {1} -Force' -f (Get-CgInvoke), $ToDrive)
     }
 }
 
@@ -621,7 +633,7 @@ function Invoke-CgWatch {
         $q = Invoke-CgNative -FilePath 'schtasks.exe' -Arguments @('/Query', '/TN', $script:CgTaskName, '/FO', 'LIST')
         if ($q -match 'cannot find|not exist') {
             Write-CgWarn 'task is not registered'
-            Write-CgInfo ('install: .\cguard.ps1 watch -Install -EveryHours {0}' -f $EveryHours)
+            Write-CgInfo ('install: {0} watch -Install -EveryHours {1}' -f (Get-CgInvoke), $EveryHours)
         } else {
             foreach ($line in ($q -split "`r?`n")) {
                 if ($line.Trim()) { Write-Host ('  ' + $line.Trim()) }
@@ -643,8 +655,25 @@ function Invoke-CgWatch {
     }
 
     $scriptPath = Join-Path $script:CgRoot 'cguard.ps1'
-    $argLine = '-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File "{0}" clean -Auto -NoColor -Only {1}' -f `
-        $scriptPath, (implodeIds (Get-CgWatchIds))
+
+    # schtasks /TR is capped at 261 characters, so pick the tier flag when it
+    # covers the watch set and only fall back to an explicit id list otherwise.
+    $watchTiers = (@($policy.watchTiers) | Where-Object { $_ }) -join ','
+    $isAllSafe = $false
+    if ($watchTiers -eq 'safe') {
+        $tierIds = @((Get-CgTargets).targets | Where-Object { $_.tier -eq 'safe' -and $_.reclaim -ne 'report-only' } | ForEach-Object { $_.id })
+        $watchIds = @(Get-CgWatchIds)
+        $isAllSafe = ($tierIds.Count -eq $watchIds.Count)
+    }
+
+    if ($isAllSafe) {
+        $selector = ('-Tier {0}' -f $watchTiers)
+    } else {
+        $selector = ('-Only {0}' -f (implodeIds (Get-CgWatchIds)))
+    }
+
+    $argLine = '-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File "{0}" clean -Auto -NoColor {1}' -f `
+        $scriptPath, $selector
 
     if (-not $Install) {
         Write-CgTitle ("cguard {0} - watch (dry run)" -f $script:CgVersion)
@@ -653,11 +682,19 @@ function Invoke-CgWatch {
         Write-Host ('  name    : {0}' -f $script:CgTaskName)
         Write-Host ('  every   : {0} hours' -f $EveryHours)
         Write-Host ('  runs    : powershell.exe {0}' -f $argLine)
+        Write-Host ('  length  : {0} chars (schtasks limit is 261)' -f ('powershell.exe ' + $argLine).Length)
         Write-CgInfo ('tiers cleaned: {0}' -f (($policy.watchTiers) -join ', '))
         Write-CgInfo ('only acts when C: free space drops below {0} GB (-Auto)' -f $policy.lowSpaceWarnGB)
         Write-Host ''
         Write-CgOk 'dry run: no task was created'
-        Write-CgInfo ('install: .\cguard.ps1 watch -Install -EveryHours {0}' -f $EveryHours)
+        Write-CgInfo ('install: {0} watch -Install -EveryHours {1}' -f (Get-CgInvoke), $EveryHours)
+        return
+    }
+
+    $exeArgs = 'powershell.exe ' + $argLine
+    if ($exeArgs.Length -gt 261) {
+        Write-CgError ('task command is {0} chars, over the schtasks limit of 261' -f $exeArgs.Length)
+        Write-CgInfo 'reduce it by setting watchTiers to a single tier in config\policy.json'
         return
     }
 
@@ -695,21 +732,22 @@ function implodeIds {
 # ---------------------------------------------------------------- entry
 
 function Show-CgHelp {
+    $e = Get-CgInvoke
     Write-Host ''
     Write-Host ("cguard {0} - keep C: from filling up while AI agents run" -f $script:CgVersion)
     Write-Host ''
-    Write-Host '  .\cguard.ps1 scan                 measure everything, change nothing'
-    Write-Host '  .\cguard.ps1 scan -Deep           also measure real-data locations'
-    Write-Host '  .\cguard.ps1 clean                dry run: what would be reclaimed'
-    Write-Host '  .\cguard.ps1 clean -Force         reclaim safe + apps tiers'
-    Write-Host '  .\cguard.ps1 clean -Force -Admin  include the locations needing Administrator'
-    Write-Host '  .\cguard.ps1 clean -Force -Only opencode-data,codex-runtimes'
-    Write-Host '  .\cguard.ps1 doctor               why is C: full, and what is safe to fix'
-    Write-Host '  .\cguard.ps1 relocate -ToDrive D  stop the growth: move caches to D:'
-    Write-Host '  .\cguard.ps1 watch -Install       clean the safe tier every 6 hours'
-    Write-Host '  .\cguard.ps1 watch -Status        is the task installed, what did it reclaim'
+    Write-Host ("  {0} scan                 measure everything, change nothing" -f $e)
+    Write-Host ("  {0} scan -Deep           also measure real-data locations" -f $e)
+    Write-Host ("  {0} clean                dry run: what would be reclaimed" -f $e)
+    Write-Host ("  {0} clean -Force         reclaim safe + apps tiers" -f $e)
+    Write-Host ("  {0} clean -Force -Admin  include the locations needing Administrator" -f $e)
+    Write-Host ("  {0} clean -Force -Only opencode-data,codex-runtimes" -f $e)
+    Write-Host ("  {0} doctor               why is C: full, and what is safe to fix" -f $e)
+    Write-Host ("  {0} relocate -ToDrive D  stop the growth: move caches to D:" -f $e)
+    Write-Host ("  {0} watch -Install       clean the safe tier every 6 hours" -f $e)
+    Write-Host ("  {0} watch -Status        is the task installed, what did it reclaim" -f $e)
     Write-Host ''
-    Write-Host '  flags: -Json  -NoColor  -Top N  -ReportPath <file>  -TargetsFile <file>'
+    Write-Host '  flags: -Json  -NoColor  -Top N  -ReportPath <file>  -TargetsFile <file>  -Tier <tier>'
     Write-Host ''
 }
 
@@ -745,3 +783,5 @@ try {
     Write-CgInfo ('at: {0}' -f $_.InvocationInfo.PositionMessage)
     exit 1
 }
+
+

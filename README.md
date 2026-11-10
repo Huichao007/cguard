@@ -14,9 +14,79 @@ that are safe, and moves the growth off the system drive for good.
 C: 257.4 GB total / 30.1 GB free  ->  142.6 GB free
 ```
 
+[中文](README.zh-CN.md) · [Changelog](CHANGELOG.md) · [Contributing](CONTRIBUTING.md)
+
 </div>
 
 ---
+
+## Install
+
+One line, no git, no Administrator:
+
+```powershell
+irm https://raw.githubusercontent.com/Huichao007/cguard/main/install.ps1 | iex
+```
+
+That installs to `%LOCALAPPDATA%\Programs\cguard`, writes a `cguard.cmd`
+launcher, adds it to your user `PATH`, and runs a scan so you immediately see
+what is reclaimable. Open a **new** terminal afterwards:
+
+```powershell
+cguard scan
+```
+
+<details>
+<summary>Other ways to install / uninstall</summary>
+
+**Download ZIP** (use this if the one-liner cannot reach raw.githubusercontent.com):
+[Download](https://github.com/Huichao007/cguard/archive/refs/heads/main.zip),
+extract anywhere, then in that folder:
+
+```powershell
+.\install.ps1
+```
+
+**Run without installing:**
+
+```powershell
+git clone https://github.com/Huichao007/cguard.git D:\Tools\cguard
+cd D:\Tools\cguard
+.\cguard.ps1 scan
+```
+
+**Uninstall:**
+
+```powershell
+cguard watch -Uninstall      # remove the scheduled task first
+.\install.ps1 -Uninstall     # then the folder and PATH entry
+```
+
+**Upgrade:** re-run the install command with `-Force`.
+
+</details>
+
+## Is this a replacement for a PC cleanup suite?
+
+**No, and it does not pretend to be.** cguard is not security software.
+
+|                                                         | A typical PC cleanup suite | cguard                       |
+| ------------------------------------------------------- | -------------------------- | ---------------------------- |
+| Virus / malware scanning                                | yes                        | **no**                       |
+| Real-time protection                                    | yes                        | **no**                       |
+| Popup blocking                                          | yes                        | **no**                       |
+| Driver updates, software uninstaller                    | yes                        | **no**                       |
+| GUI                                                     | yes                        | **no, command line**         |
+| **Knows AI toolchain caches**                           | no                         | 23 built-in targets          |
+| **Knows `~/.local/share/opencode` is output, not data** | no                         | yes, and keeps `opencode.db` |
+| **Finds Dell repair snapshots (tens of GB)**            | silent                     | `doctor` looks for them      |
+| **Moves caches off C: permanently**                     | no                         | `relocate`                   |
+| **Rates every file by "what breaks if I delete this"**  | one-size-fits-all          | safe / apps / review         |
+| **Deletes nothing by default**                          | cleans by default          | dry-run by default           |
+| Resident process / install footprint                    | yes, large                 | one script, nothing resident |
+
+Short version: **a cleanup suite defends against malware; cguard defends against
+your own toolchain.** Run both — they do not conflict.
 
 ## The problem
 
@@ -64,6 +134,9 @@ cd cguard
 .\cguard.ps1 doctor            # why is it full, and what is safe to fix
 ```
 
+If you installed with `install.ps1`, drop the `.\cguard.ps1` and just type
+`cguard scan`.
+
 Run it elevated for the machine-wide targets:
 
 ```powershell
@@ -101,6 +174,7 @@ Three tiers, because "safe to delete" is not one thing:
 .\cguard.ps1 clean                              # dry run
 .\cguard.ps1 clean -Force                       # safe + apps tiers
 .\cguard.ps1 clean -Force -Only opencode-data   # just one target
+.\cguard.ps1 clean -Force -Tier safe            # just one tier
 .\cguard.ps1 clean -Force -Admin                # include admin-only targets
 .\cguard.ps1 clean -Auto                        # only if C: is actually low
 .\cguard.ps1 clean -Force -ReportPath report.md # write a markdown report
@@ -151,6 +225,9 @@ that is already configured sanely will not be disturbed.
 The task runs `clean -Auto`, which **does nothing unless free space is below
 the threshold** (20 GB by default, `config\policy.json`). A healthy machine is
 never touched, so the task cannot surprise you by deleting a cache mid-build.
+
+Verified behaviour: a forced run on a healthy machine exits `0` and logs
+`mode=auto-skip` rather than deleting anything.
 
 ## Safety model
 
@@ -211,6 +288,16 @@ Point the engine at a different file with `-TargetsFile mine.json`.
 - Windows 10 or 11
 - PowerShell 5.1 (ships with Windows) — no modules, no `Install-Module`, no elevation to scan
 - Administrator only for `%WINDIR%\Temp`, Windows Update cache, `$WinREAgent`, shadow copies and Dell snapshots
+
+## Maintaining this
+
+- Version history: [CHANGELOG.md](CHANGELOG.md), semantic versioning.
+- Upgrade: re-run the install command with `-Force`, or `git pull` in a checkout.
+- Reporting a bad deletion: see the `[SAFETY]` issue template. Include the audit
+  line from `%LOCALAPPDATA%\cguard\cguard.log` — it is the only durable record
+  of what a run touched, which is why it is written even in dry-run mode.
+- Adding a target: edit `config/targets.json`; the test suite validates the
+  schema and the safety rules on every PR.
 
 ## What it will not do
 
