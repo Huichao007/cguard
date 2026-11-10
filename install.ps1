@@ -113,6 +113,14 @@ function Add-ToUserPath {
     return 'added'
 }
 
+# Where are we running from? When piped through iex there is no script file,
+# so fall back to downloading the repo zip. Defined early because the uninstall
+# branch needs it to know whether it is deleting its own folder.
+$localSource = ''
+$invoked = $MyInvocation.MyCommand.Path
+if ($invoked) { $localSource = Split-Path -Parent $invoked }
+elseif ($PSScriptRoot) { $localSource = $PSScriptRoot }
+
 # ---------------------------------------------------------------- uninstall
 
 if ($Uninstall) {
@@ -124,20 +132,63 @@ if ($Uninstall) {
     $dirs += (Get-DefaultInstallDir)
     $dirs = @($dirs | Select-Object -Unique)
 
+    # Cannot delete a directory that is the current working directory, and
+    # users do run -Uninstall from inside the install folder. Step out first.
+    $cwd = (Get-Location).Path
+    foreach ($d in $dirs) {
+        if ($d -and $cwd -and $cwd.TrimEnd('\').StartsWith($d.TrimEnd('\'), [StringComparison]::OrdinalIgnoreCase)) {
+            Set-Location $env:TEMP
+            Say "moved working directory out of $d" 'info'
+            $cwd = (Get-Location).Path
+            break
+        }
+    }
+
+    $failed = @()
+    $deferred = @()
+
+    # The running script itself lives in the install folder, and Windows keeps
+    # a .ps1 open while it executes. So when the script is inside the target,
+    # hand the deletion to a detached process that runs after we exit.
+    $selfPath = $invoked
+    $isSelf = $false
+    if ($selfPath -and $cwd -and $selfPath) {
+        foreach ($d in $dirs) {
+            if ($d -and $selfPath.StartsWith($d.TrimEnd('\'), [StringComparison]::OrdinalIgnoreCase)) {
+                $isSelf = $true
+            }
+        }
+    }
+
     foreach ($d in $dirs) {
         if ($d -and (Test-Path -LiteralPath $d)) {
-            try {
-                Remove-Item -LiteralPath $d -Recurse -Force -ErrorAction Stop
-                Say ("removed $d") 'ok'
-            } catch {
-                Say ("could not remove ${d}: " + $_.Exception.Message) 'warn'
+            if ($isSelf) {
+                $deferred += $d
+            } else {
+                $removed = $false
+                try {
+                    Remove-Item -LiteralPath $d -Recurse -Force -ErrorAction Stop
+                    $removed = $true
+                } catch {
+                    cmd /c ("rd /s /q `"{0}`" >nul 2>&1" -f $d) | Out-Null
+                    $removed = -not (Test-Path -LiteralPath $d)
+                }
+                if ($removed) { Say "removed $d" 'ok' }
+                else {
+                    Say "could not remove $d (a file there is still in use)" 'warn'
+                    $failed += $d
+                }
             }
         }
         if (Remove-FromUserPath $d) { Say "removed $d from PATH" 'ok' }
     }
 
-    & schtasks.exe /Delete /TN $TaskName /F 2>&1 | Out-Null
-    Say 'scheduled task removed (if it existed)' 'ok'
+    try {
+        & schtasks.exe /Delete /TN $TaskName /F 2>&1 | Out-Null
+        Say 'scheduled task removed (if it existed)' 'ok'
+    } catch {
+        Say 'scheduled task was not registered, nothing to remove' 'info'
+    }
 
     $logDir = Join-Path $env:LOCALAPPDATA 'cguard'
     if (Test-Path -LiteralPath $logDir) {
@@ -146,6 +197,28 @@ if ($Uninstall) {
     }
 
     Write-Host ''
+    if ($deferred.Count -gt 0) {
+        foreach ($d in $deferred) {
+            $tomb = $d + '.delete-' + [guid]::NewGuid().ToString('N').Substring(0, 6)
+            $cmd = '/c ping 127.0.0.1 -n 3 >nul & if exist "{0}" move "{0}" "{1}" >nul 2>&1 & rd /s /q "{0}" >nul 2>&1 & rd /s /q "{1}" >nul 2>&1'
+            $cmd = $cmd -f $d, $tomb
+            try {
+                Start-Process -FilePath 'cmd.exe' -ArgumentList $cmd -WindowStyle Hidden
+                Say ("scheduled removal of $d (finishes a few seconds after this window closes)") 'ok'
+            } catch {
+                Say ("could not schedule removal of ${d}: " + $_.Exception.Message) 'warn'
+                $failed += $d
+            }
+        }
+    }
+
+    if ($failed.Count -gt 0) {
+        Say 'PATH entry and task were removed, but the folder is still there.' 'warn'
+        Say 'close any terminal that is inside it, then delete it manually:' 'info'
+        foreach ($f in $failed) { Say ('  rd /s /q "' + $f + '"') }
+        exit 1
+    }
+
     Say 'cguard uninstalled. Open a new terminal for PATH changes to apply.' 'ok'
     return
 }
@@ -159,12 +232,8 @@ Write-Host ''
 if (-not $InstallDir) { $InstallDir = Get-DefaultInstallDir }
 $InstallDir = Get-RealPath $InstallDir
 
-# Where are we running from? When piped through iex there is no script file,
-# so fall back to downloading the repo zip.
-$localSource = ''
-$invoked = $MyInvocation.MyCommand.Path
-if ($invoked) { $localSource = Split-Path -Parent $invoked }
-elseif ($PSScriptRoot) { $localSource = $PSScriptRoot }
+# Where are we running from? Already derived above, because the uninstall
+# branch needs it.
 
 $hasLocal = $false
 if ($localSource) {

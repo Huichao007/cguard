@@ -248,10 +248,17 @@ This tool deletes files, so the rules are explicit:
    plenty of space.
 
 `tests\test-cguard.ps1` asserts every one of those rules against a throwaway
-sandbox — 29 checks, no real cache touched:
+sandbox — 32 checks, no real cache touched:
 
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File .\tests\test-cguard.ps1
+```
+
+`tests\test-install.ps1` covers the installer itself — 16 checks, including
+uninstalling while standing inside the install folder:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\tests\test-install.ps1
 ```
 
 ## Adding your own target

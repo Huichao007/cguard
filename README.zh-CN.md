@@ -179,6 +179,12 @@ cguard watch -Status                              # 看任务状态和最近审�
 powershell -NoProfile -ExecutionPolicy Bypass -File .\tests\test-cguard.ps1
 ```
 
+安装器另有 16 项测试，包括「站在安装目录里执行卸载」这种真实场景：
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\tests\test-install.ps1
+```
+
 ## 六、自己加一条规则
 
 `config\targets.json` 就是全部知识库。加一条：

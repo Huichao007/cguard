@@ -30,9 +30,15 @@
   - Dell SupportAssist 修复快照
 - 安全模型：三档分级、`keep` 名单、`minAgeDays`、只读档永不删除、锁定文件跳过不强制。
 - 审计日志：每次运行追加一行到 `%LOCALAPPDATA%\cguard\cguard.log`。
-- `install.ps1`：一行命令安装，自动写 PATH 和 `cguard.cmd` 启动器，可 `-Uninstall` 卸载。
-- 自测 32 项断言，全部在临时沙箱里跑，不碰真实缓存。
-- GitHub Actions：PowerShell 5.1 + 7 双版本跑自测、语法检查、侧效应检查。
+- `install.ps1`：一行命令安装（`irm ... | iex`），无需 git、无需管理员。
+  自动写 `cguard.cmd` 启动器、加用户 PATH、可选装计划任务，支持 `-Uninstall`。
+  从零下载安装实测 7.4 秒。
+  - 卸载支持「站在安装目录里执行」：脚本自身占用目录时改为退出后延迟删除，8 秒内清干净。
+  - 二次安装不加 `-Force` 会拒绝覆盖并提示，不会静默破坏现有安装。
+- 自测 32 项断言 + 安装器 16 项断言，全部在临时沙箱里跑，不碰真实缓存。
+- GitHub Actions：PowerShell 5.1 + 7 双版本跑两套测试、语法检查、侧效应检查。
+- `README.zh-CN.md`：完整中文文档，含与「电脑管家类」软件的能力对照表（明确说明
+  cguard 不杀毒、不拦弹窗、不装驱动、不卸载软件）。
 
 ### 已知限制
 
